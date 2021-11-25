@@ -5,6 +5,7 @@ import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
 import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader";
 import { loadGLTF, CornControls } from "./utilities";
+import { ToneShader } from "./shaders";
 
 function animate(renderFunction: () => void) {
   requestAnimationFrame(() => animate(renderFunction));
@@ -29,11 +30,13 @@ async function createScene() {
 
   const scene = new THREE.Scene();
 
-  const fxaaPass = new ShaderPass(FXAAShader);
   const composer = new EffectComposer(renderer);
   const renderPass = new RenderPass(scene, camera);
+  const fxaaPass = new ShaderPass(FXAAShader);
+  const tonePass = new ShaderPass(ToneShader);
   composer.addPass(renderPass);
   composer.addPass(fxaaPass);
+  composer.addPass(tonePass);
   composer.setPixelRatio(window.devicePixelRatio);
 
   function initializeDimensions() {
