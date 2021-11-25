@@ -9,28 +9,36 @@ function animate(renderFunction: () => void) {
 
 async function createScene() {
   // set up camera
-  const camera = new THREE.PerspectiveCamera(
-    50,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
-  camera.position.z = 5;
+  const vFOV = 50;
+  const aspectRatio = window.innerWidth / window.innerHeight;
+  const camera = new THREE.PerspectiveCamera(vFOV, aspectRatio, 0.1, 1000);
 
   // set up renderer
   const renderer = new THREE.WebGLRenderer({ alpha: true });
   renderer.toneMapping = THREE.LinearToneMapping;
   renderer.toneMappingExposure = 0.9;
-  renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x000000, 0);
   renderer.domElement.style.backgroundImage = "url(fieldbg.jpg)";
   renderer.domElement.style.backgroundSize = "cover";
+  renderer.domElement.style.backgroundPosition = "center";
+
+  function initializeDimensions() {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    const aspectRatio = window.innerWidth / window.innerHeight;
+    camera.position.z = 4;
+    if (aspectRatio < 1) {
+      camera.position.z *= 1.5 * (1 / aspectRatio);
+    }
+  }
+
+  initializeDimensions();
+  window.addEventListener("resize", initializeDimensions);
 
   // create scene and add objects and lights
   const scene = new THREE.Scene();
   const corn = (await loadGLTF("/corn.glb")).scene;
   const kernelMaterial = new MeshPhongMaterial({
-    color: 0xf9ff59,
+    color: 0xfff159,
     shininess: 1,
   });
   for (const child of corn.children) {
@@ -56,7 +64,6 @@ async function createScene() {
   );
 
   // create render function that utilizes the renderer, scene, camera, and controls
-  // let count = 0;
   const renderFunction = () => {
     controls.applyRotation(corn);
     renderer.render(scene, camera);

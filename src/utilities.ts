@@ -23,6 +23,7 @@ class CornControls {
   rotation: THREE.Euler;
   _active = false;
   _lastPointer = { x: -1, y: -1 };
+
   getPointerPos(event: MouseEvent | TouchEvent) {
     if (event instanceof MouseEvent) {
       return {
@@ -36,13 +37,16 @@ class CornControls {
       };
     }
   }
+
   pointerDown(event: MouseEvent | TouchEvent) {
     this._active = true;
     this._lastPointer = this.getPointerPos(event);
   }
+
   pointerUp() {
     this._active = false;
   }
+
   pointerMove(event: MouseEvent | TouchEvent) {
     if (!this._active) {
       return;
@@ -63,13 +67,20 @@ class CornControls {
       pixelsToRadians;
     this._lastPointer = currentPointer;
   }
+
   constructor(el: HTMLCanvasElement, startingRotation: THREE.Euler) {
     this.rotation = startingRotation;
     el.addEventListener("mousedown", (e) => this.pointerDown(e));
     el.addEventListener("mousemove", (e) => this.pointerMove(e));
     el.addEventListener("mouseup", () => this.pointerUp());
-    // add touch events
+    el.addEventListener("touchstart", (e) => this.pointerDown(e));
+    el.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      this.pointerMove(e);
+    });
+    el.addEventListener("touchend", () => this.pointerUp());
   }
+
   applyRotation(obj: Object3D) {
     // we want to rotate the corn around the global y and the local x (the local
     // x-axis goes lengthwise along the cob)
