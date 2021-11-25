@@ -7,5 +7,11 @@ export default {
     path: path.join(__dirname, "dist"),
     filename: "index_bundle.[contenthash].js",
   },
+  resolve: {
+    extensions: [".ts", ".tsx", ".js"],
+  },
+  module: {
+    rules: [{ test: /\.tsx?$/, loader: "ts-loader" }],
+  },
   plugins: [new HtmlWebpackPlugin({ template: "./src/index.html" })],
 };
