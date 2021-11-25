@@ -50,6 +50,11 @@ async function createScene() {
   }
   scene.add(corn);
 
+  function getKernelCount() {
+    return corn.children.length - 1;
+  }
+  const initialKernelCount = getKernelCount();
+
   const ambient = new THREE.AmbientLight(0xffffff, 0.3);
   scene.add(ambient);
   const point = new THREE.PointLight(0xffffff, 0.5, 100);
@@ -91,6 +96,10 @@ async function createScene() {
   const renderFunction = () => {
     controls.applyRotation(corn);
     renderer.render(scene, camera);
+    document.querySelector("#info").innerHTML = `${(
+      ((initialKernelCount - getKernelCount()) / initialKernelCount) *
+      100
+    ).toFixed(2)} % Eaten`;
   };
 
   // add renderer to DOM and start the animation loop
