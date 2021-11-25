@@ -51,8 +51,7 @@ async function createScene() {
   // create render function that utilizes the renderer, scene, camera, and controls
   // let count = 0;
   const renderFunction = () => {
-    corn.setRotationFromEuler(new THREE.Euler(controls.rotation.x, 0, 0));
-    corn.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), controls.rotation.y);
+    controls.applyRotation(corn);
     renderer.render(scene, camera);
   };
 

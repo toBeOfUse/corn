@@ -1,4 +1,4 @@
-import { Euler } from "three";
+import { Object3D, Euler, Vector3 } from "three";
 import { GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 const loader = new GLTFLoader();
 
@@ -47,13 +47,20 @@ class CornControls {
     if (!this._active) {
       return;
     }
+    // if the model has been rotated around the y axis more than 90 degrees and less
+    // than 270 degrees either positively or negatively, it has been "turned around"
+    // and the x-rotation needs to be flipped
+    const testY = Math.abs(this.rotation.y) % (Math.PI * 2);
+    const turnedAround = testY > Math.PI / 2 && testY < (3 * Math.PI) / 2;
     const currentPointer = this.getPointerPos(event);
     const pixelsToDegrees = 1;
     const pixelsToRadians = (pixelsToDegrees / 360) * (2 * Math.PI);
     this.rotation.y +=
       (currentPointer.x - this._lastPointer.x) * pixelsToRadians;
     this.rotation.x +=
-      (currentPointer.y - this._lastPointer.y) * pixelsToRadians;
+      (turnedAround ? -1 : 1) *
+      (currentPointer.y - this._lastPointer.y) *
+      pixelsToRadians;
     this._lastPointer = currentPointer;
   }
   constructor(el: HTMLCanvasElement, startingRotation: THREE.Euler) {
@@ -62,6 +69,12 @@ class CornControls {
     el.addEventListener("mousemove", (e) => this.pointerMove(e));
     el.addEventListener("mouseup", () => this.pointerUp());
     // add touch events
+  }
+  applyRotation(obj: Object3D) {
+    // we want to rotate the corn around the global y and the local x (the local
+    // x-axis goes lengthwise along the cob)
+    obj.setRotationFromEuler(new Euler(this.rotation.x, 0, 0));
+    obj.rotateOnWorldAxis(new Vector3(0, 1, 0), this.rotation.y);
   }
 }
 
