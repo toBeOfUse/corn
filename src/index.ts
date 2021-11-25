@@ -26,9 +26,11 @@ async function createScene() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     const aspectRatio = window.innerWidth / window.innerHeight;
     camera.position.z = 4;
-    if (aspectRatio < 1) {
+    if (aspectRatio < 4 / 3) {
       camera.position.z *= 1.5 * (1 / aspectRatio);
     }
+    camera.aspect = aspectRatio;
+    camera.updateProjectionMatrix();
   }
 
   initializeDimensions();
