@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { MeshPhongMaterial } from "three";
+import { MeshPhongMaterial, Raycaster } from "three";
 import { loadGLTF, CornControls } from "./utilities";
 
 function animate(renderFunction: () => void) {
@@ -64,6 +64,28 @@ async function createScene() {
     renderer.domElement,
     new THREE.Euler(0, 0, 0)
   );
+
+  const raycaster = new Raycaster();
+  renderer.domElement.addEventListener("click", (event) => {
+    if ((window as any)._cornCancelClick) {
+      // clicks that immediately follow drags are actually part of the drag. hence
+      // the kludge semaphore
+      (window as any)._cornCancelClick = false;
+      return;
+    }
+    const ndc = {
+      x: (event.clientX / window.innerWidth) * 2 - 1,
+      y: -(event.clientY / window.innerHeight) * 2 + 1,
+    };
+    raycaster.setFromCamera(ndc, camera);
+    const intersects = raycaster.intersectObjects(
+      corn.children.filter((c) => c.name.includes("Kernel")),
+      false
+    );
+    if (intersects.length > 0) {
+      intersects[0].object.removeFromParent();
+    }
+  });
 
   // create render function that utilizes the renderer, scene, camera, and controls
   const renderFunction = () => {

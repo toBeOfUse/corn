@@ -51,6 +51,9 @@ class CornControls {
     if (!this._active) {
       return;
     }
+    // cancel next click event as it is actually part of this drag
+    (window as any)._cornCancelClick = true;
+    event.preventDefault();
     // if the model has been rotated around the y axis more than 90 degrees and less
     // than 270 degrees either positively or negatively, it has been "turned around"
     // and the x-rotation needs to be flipped
@@ -74,10 +77,7 @@ class CornControls {
     el.addEventListener("mousemove", (e) => this.pointerMove(e));
     el.addEventListener("mouseup", () => this.pointerUp());
     el.addEventListener("touchstart", (e) => this.pointerDown(e));
-    el.addEventListener("touchmove", (e) => {
-      e.preventDefault();
-      this.pointerMove(e);
-    });
+    el.addEventListener("touchmove", (e) => this.pointerMove(e));
     el.addEventListener("touchend", () => this.pointerUp());
   }
 
