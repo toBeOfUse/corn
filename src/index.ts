@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { MeshPhongMaterial } from "three";
 import { loadGLTF, CornControls } from "./utilities";
 
 function animate(renderFunction: () => void) {
@@ -18,6 +19,8 @@ async function createScene() {
 
   // set up renderer
   const renderer = new THREE.WebGLRenderer({ alpha: true });
+  renderer.toneMapping = THREE.LinearToneMapping;
+  renderer.toneMappingExposure = 0.9;
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x000000, 0);
   renderer.domElement.style.backgroundImage = "url(fieldbg.jpg)";
@@ -26,19 +29,23 @@ async function createScene() {
   // create scene and add objects and lights
   const scene = new THREE.Scene();
   const corn = (await loadGLTF("/corn.glb")).scene;
+  const kernelMaterial = new MeshPhongMaterial({
+    color: 0xf9ff59,
+    shininess: 1,
+  });
+  for (const child of corn.children) {
+    if (child.name.includes("Kernel") && child instanceof THREE.Mesh) {
+      child.material = kernelMaterial;
+    }
+  }
   scene.add(corn);
-  // const directional = new THREE.DirectionalLight(0xffffff);
-  // directional.position.set(0, 0.5, 0.5);
-  // scene.add(directional);
-  //   const helper = new THREE.directionalHelper(directional, 5);
-  //   scene.add(helper);
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.3); // soft white light
+  const ambient = new THREE.AmbientLight(0xffffff, 0.3);
   scene.add(ambient);
-  const point = new THREE.PointLight(0xffffff, 1, 100);
+  const point = new THREE.PointLight(0xffffff, 0.5, 100);
   point.position.set(0, -10, 0);
   scene.add(point);
-  const point2 = new THREE.PointLight(0xffffff, 1, 100);
+  const point2 = new THREE.PointLight(0xffffff, 0.8, 100);
   point2.position.set(0, 5, 5);
   scene.add(point2);
 
