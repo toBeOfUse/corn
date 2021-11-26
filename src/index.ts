@@ -61,16 +61,7 @@ async function createScene() {
 
   // initialize scene and add objects and lights
   const corn = (await loadGLTF("/corn.glb")).scene;
-  (
-    (corn.children.find((c) => c.name == "Cob") as Mesh)
-      .material as MeshStandardMaterial
-  ).roughness = 1;
   scene.add(corn);
-
-  function getKernelCount() {
-    return corn.children.length - 1;
-  }
-  const initialKernelCount = getKernelCount();
 
   const ambient = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambient);
@@ -85,6 +76,8 @@ async function createScene() {
   );
 
   const raycaster = new Raycaster();
+  (window as any).cheatKernels = () => corn.children;
+  const initialKernelCount = corn.children.length;
   renderer.domElement.addEventListener("click", (event) => {
     if ((window as any)._cornCancelClick) {
       // clicks that immediately follow drags are actually part of the drag. hence
@@ -97,23 +90,32 @@ async function createScene() {
       y: -(event.clientY / window.innerHeight) * 2 + 1,
     };
     raycaster.setFromCamera(ndc, camera);
-    const intersects = raycaster.intersectObjects(
-      corn.children.filter((c) => c.name.includes("Kernel")),
-      false
-    );
+    const intersects = raycaster.intersectObjects(corn.children, false);
     if (intersects.length > 0) {
-      intersects[0].object.removeFromParent();
+      let objectToRemove: THREE.Intersection;
+      if (corn.children.length > 2) {
+        objectToRemove = intersects.find((k) =>
+          k.object.name.includes("Kernel")
+        );
+      } else {
+        objectToRemove = intersects[0];
+      }
+      if (objectToRemove) {
+        objectToRemove.object.removeFromParent();
+      }
+
+      const newKernelCount = corn.children.length;
+      document.querySelector("#info").innerHTML = `${(
+        100 -
+        (newKernelCount / initialKernelCount) * 100
+      ).toFixed(2)} % Eaten`;
     }
   });
 
-  // create render function that utilizes the renderer, scene, camera, and controls
+  // create render function that utilizes the controls and composed render passes
   const renderFunction = () => {
     controls.applyRotation(corn);
     composer.render();
-    document.querySelector("#info").innerHTML = `${(
-      ((initialKernelCount - getKernelCount()) / initialKernelCount) *
-      100
-    ).toFixed(2)} % Eaten`;
   };
 
   // add renderer to DOM and start the animation loop
