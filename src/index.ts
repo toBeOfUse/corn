@@ -1,11 +1,16 @@
 import * as THREE from "three";
-import { Mesh, MeshStandardMaterial, Raycaster } from "three";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
 import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader";
-import { loadGLTF, CornControls } from "./utilities";
+import {
+  ProgressGLTFLoader,
+  combineClips,
+  makeAnimationAwaitable,
+  AwaitableAnimationAction,
+} from "./utilities";
 import { ToneShader } from "./shaders";
+import { Corn } from "./corn";
 
 function animate(renderFunction: () => void) {
   requestAnimationFrame(() => animate(renderFunction));
@@ -60,8 +65,18 @@ async function createScene() {
   window.addEventListener("resize", initializeDimensions);
 
   // initialize scene and add objects and lights
-  const corn = (await loadGLTF("/corn.glb")).scene;
-  scene.add(corn);
+  const loadingTweet = await new ProgressGLTFLoader("/owned.glb", undefined)
+    .model;
+  const loadingTweetScene = loadingTweet.scene;
+  scene.add(loadingTweetScene);
+  const tweetAnimater = new THREE.AnimationMixer(loadingTweetScene);
+  const clips = loadingTweet.animations;
+  console.log("loaded", clips.length, "animations");
+  const tweetAnimation = makeAnimationAwaitable(
+    tweetAnimater.clipAction(combineClips(clips))
+  );
+  tweetAnimation.clampWhenFinished = true;
+  tweetAnimation.loop = THREE.LoopOnce;
 
   const ambient = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambient);
@@ -69,52 +84,33 @@ async function createScene() {
   point.position.set(0, 20, 20);
   scene.add(point);
 
-  // set up controls
-  const controls = new CornControls(
-    renderer.domElement,
-    new THREE.Euler(0, 0, 0)
-  );
-
-  const raycaster = new Raycaster();
-  (window as any).cheatKernels = () => corn.children;
-  const initialKernelCount = corn.children.length;
-  renderer.domElement.addEventListener("click", (event) => {
-    if ((window as any)._cornCancelClick) {
-      // clicks that immediately follow drags are actually part of the drag. hence
-      // the kludge semaphore
-      (window as any)._cornCancelClick = false;
-      return;
-    }
-    const ndc = {
-      x: (event.clientX / window.innerWidth) * 2 - 1,
-      y: -(event.clientY / window.innerHeight) * 2 + 1,
-    };
-    raycaster.setFromCamera(ndc, camera);
-    const intersects = raycaster.intersectObjects(corn.children, false);
-    if (intersects.length > 0) {
-      let objectToRemove: THREE.Intersection;
-      if (corn.children.length > 2) {
-        objectToRemove = intersects.find((k) =>
-          k.object.name.includes("Kernel")
-        );
-      } else {
-        objectToRemove = intersects[0];
-      }
-      if (objectToRemove) {
-        objectToRemove.object.removeFromParent();
-      }
-
-      const newKernelCount = corn.children.length;
-      document.querySelector("#info").innerHTML = `${(
-        100 -
-        (newKernelCount / initialKernelCount) * 100
-      ).toFixed(2)} % Eaten`;
-    }
+  const corn = new Corn("/corn.glb", document.querySelector("#info"));
+  (window as any).cornCheat = corn;
+  const cornGroup = new THREE.Group();
+  scene.add(cornGroup);
+  let activeAnimation: AwaitableAnimationAction;
+  corn.loaded.then(async () => {
+    cornGroup.add(corn.cob);
+    activeAnimation = corn.cobFadeIn;
+    await activeAnimation.playThrough();
+    activeAnimation = tweetAnimation;
+    await activeAnimation.playThrough();
+    cornGroup.add(corn.kernels);
+    activeAnimation = corn.kernelsFadeIn;
+    await activeAnimation.playThrough();
+    loadingTweetScene.removeFromParent();
+    corn.createControls(renderer.domElement, cornGroup, camera);
   });
 
-  // create render function that utilizes the controls and composed render passes
+  // create render function that utilizes the corn and composed render passes
+  let lastRenderTime = Date.now() / 1000;
   const renderFunction = () => {
-    controls.applyRotation(corn);
+    const currentTime = Date.now() / 1000;
+    if (activeAnimation) {
+      activeAnimation.getMixer().update(currentTime - lastRenderTime);
+    }
+    corn.update();
+    lastRenderTime = currentTime;
     composer.render();
   };
 
