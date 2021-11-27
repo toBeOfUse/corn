@@ -184,7 +184,9 @@ class Corn {
     if (this.kernels && this.cob) {
       const statusText = `${(
         100 -
-        ((this.kernels.children.length + 1) / this._initialObjectCount) * 100
+        ((this.kernels.children.length + (this.cob.parent ? 1 : 0)) /
+          this._initialObjectCount) *
+          100
       ).toFixed(2)} % Eaten`;
       if (this._statusElement.innerHTML != statusText) {
         this._statusElement.innerHTML = statusText;
