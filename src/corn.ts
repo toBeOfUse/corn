@@ -129,40 +129,39 @@ class Corn {
   _statusElement: HTMLElement;
   constructor(cornURL: string, statusElement: HTMLElement) {
     this._statusElement = statusElement;
-    this.loaded = new ProgressGLTFLoader(
-      cornURL,
-      document.querySelector("#loading")
-    ).model.then((cornScene) => {
-      this.cob = cornScene.scene.getObjectByName("Cob");
-      this._initialObjectCount = cornScene.scene.children.length;
-      const encounteredMaterials = new Set();
-      for (const k of cornScene.scene.children) {
-        if (k instanceof THREE.Mesh) {
-          const mat = k.material as THREE.MeshStandardMaterial;
-          if (!encounteredMaterials.has(mat)) {
-            mat.transparent = true;
-            mat.format = THREE.RGBAFormat;
-            mat.opacity = 0;
-            encounteredMaterials.add(mat);
+    this.loaded = new ProgressGLTFLoader(cornURL, undefined).model.then(
+      (cornScene) => {
+        this.cob = cornScene.scene.getObjectByName("Cob");
+        this._initialObjectCount = cornScene.scene.children.length;
+        const encounteredMaterials = new Set();
+        for (const k of cornScene.scene.children) {
+          if (k instanceof THREE.Mesh) {
+            const mat = k.material as THREE.MeshStandardMaterial;
+            if (!encounteredMaterials.has(mat)) {
+              mat.transparent = true;
+              mat.format = THREE.RGBAFormat;
+              mat.opacity = 0;
+              encounteredMaterials.add(mat);
+            }
           }
         }
-      }
-      this.kernels = new THREE.Group();
-      for (let i = 0; i < cornScene.scene.children.length; ) {
-        const child = cornScene.scene.children[i];
-        if (child.name != "Cob") {
-          this.kernels.add(child);
-        } else {
-          i++;
+        this.kernels = new THREE.Group();
+        for (let i = 0; i < cornScene.scene.children.length; ) {
+          const child = cornScene.scene.children[i];
+          if (child.name != "Cob") {
+            this.kernels.add(child);
+          } else {
+            i++;
+          }
         }
+        this.cobFadeIn = makeFadeInAnimation(this.cob, 0.5);
+        this.kernelsFadeIn = makeFadeInAnimation(
+          (this.kernels.children[0] as THREE.Mesh).material as THREE.Material,
+          0.5
+        );
+        this._statusElement.style.display = "unset";
       }
-      this.cobFadeIn = makeFadeInAnimation(this.cob, 0.5);
-      this.kernelsFadeIn = makeFadeInAnimation(
-        (this.kernels.children[0] as THREE.Mesh).material as THREE.Material,
-        0.5
-      );
-      this._statusElement.style.display = "unset";
-    });
+    );
   }
   createControls(
     el: HTMLCanvasElement,

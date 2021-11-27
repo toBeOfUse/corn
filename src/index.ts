@@ -90,6 +90,7 @@ async function createScene() {
   scene.add(cornGroup);
   let activeAnimation: AwaitableAnimationAction;
   corn.loaded.then(async () => {
+    document.querySelector("#loading")?.remove();
     cornGroup.add(corn.cob);
     activeAnimation = corn.cobFadeIn;
     await activeAnimation.playThrough();
