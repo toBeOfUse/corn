@@ -76,14 +76,17 @@ class CornControls {
     };
     this._raycaster.setFromCamera(ndc, this._camera);
     if (this._kernels.children.length == 1 && this._cob.parent) {
+      // if there is only one kernel left, it is the hidden kernel inside the cob,
+      // and we need to eat the cob to get to it
       if (this._raycaster.intersectObject(this._cob)) {
         this._cob.removeFromParent();
       }
     } else {
+      // otherwise, eat whatever kernel (not cob) is the closest intersected object
       const intersects = this._raycaster.intersectObjects(
-        this._kernels.children
+        this._kernels.children.concat(this._cob.parent ? [this._cob] : [])
       );
-      if (intersects.length) {
+      if (intersects.length && intersects[0].object != this._cob) {
         intersects[0].object.removeFromParent();
       }
     }
@@ -176,6 +179,9 @@ class Corn {
       this.cob,
       camera
     );
+  }
+  completelyEaten(): boolean {
+    return !this.kernels.children.length && !this.cob.parent;
   }
   update() {
     if (this._controls && this.renderGroup) {
