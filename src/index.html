@@ -25,10 +25,19 @@
         border-radius: 5px;
         border: 1px solid black;
         padding: 3px;
+        display: none;
+      }
+      #loading {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40%;
       }
     </style>
   </head>
   <body>
     <div id="info">0.00 % Eaten</div>
+    <progress id="loading" max="1" value="0"></progress>
   </body>
 </html>
