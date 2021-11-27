@@ -89,7 +89,12 @@ async function createScene() {
   const cornGroup = new THREE.Group();
   scene.add(cornGroup);
   let activeAnimation: AwaitableAnimationAction;
+  let loadStartTime = Date.now();
   corn.loaded.then(async () => {
+    // wait until at least 3 seconds have passed for tweet reading purposes
+    await new Promise((r) =>
+      setTimeout(r, Math.max(0, 3000 - (Date.now() - loadStartTime)))
+    );
     document.querySelector("#loading")?.remove();
     cornGroup.add(corn.cob);
     activeAnimation = corn.cobFadeIn;
