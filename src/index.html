@@ -33,6 +33,13 @@
         left: 50%;
         transform: translateX(-50%);
       }
+      #congrats {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: none;
+      }
       .lds-circle {
         display: inline-block;
         transform: translateZ(1px);
@@ -43,7 +50,7 @@
         height: 64px;
         margin: 8px;
         border-radius: 50%;
-        border: 1px solid black;
+        border: 2px solid black;
         background: #fff;
         animation: lds-circle 10s cubic-bezier(0, 0.2, 0.8, 1) infinite;
       }
@@ -67,6 +74,21 @@
   </head>
   <body>
     <div id="info">0.00 % Eaten</div>
+    <div id="congrats">
+      <svg viewBox="0 0 2000 400" style="height: 100px">
+        <text
+          x="1000"
+          y="375"
+          fill="black"
+          font-size="375"
+          text-anchor="middle"
+          font-family="sans-serif"
+          font-weight="bold"
+        >
+          You Win
+        </text>
+      </svg>
+    </div>
     <div class="lds-circle" id="loading"><div></div></div>
   </body>
 </html>
