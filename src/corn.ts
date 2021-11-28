@@ -181,7 +181,12 @@ class Corn {
     );
   }
   completelyEaten(): boolean {
-    return !this.kernels.children.length && !this.cob.parent;
+    return (
+      this.cob &&
+      this.kernels &&
+      !this.kernels.children.length &&
+      !this.cob.parent
+    );
   }
   update() {
     if (this._controls && this.renderGroup) {
