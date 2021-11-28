@@ -26,7 +26,9 @@ function makeAnimationAwaitable(
   action: THREE.AnimationAction
 ): AwaitableAnimationAction {
   const doneAnimating = new Promise<void>((resolve) => {
-    action.getMixer().addEventListener("finished", () => resolve());
+    action.getMixer().addEventListener("finished", (f) => {
+      if (f.action == action) resolve();
+    });
   });
   return Object.assign(action, {
     doneAnimating,
