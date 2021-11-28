@@ -8,6 +8,7 @@ import {
   combineClips,
   makeAnimationAwaitable,
   AwaitableAnimationAction,
+  makeRainingAnimation,
 } from "./utilities";
 import { ToneShader } from "./shaders";
 import { Corn } from "./corn";
@@ -85,7 +86,6 @@ async function createScene() {
   scene.add(point);
 
   const corn = new Corn("/corn.glb", document.querySelector("#info"));
-  (window as any).cornCheat = corn;
   const cornGroup = new THREE.Group();
   scene.add(cornGroup);
   let activeAnimation: AwaitableAnimationAction;
@@ -105,17 +105,70 @@ async function createScene() {
     activeAnimation = corn.kernelsFadeIn;
     await activeAnimation.playThrough();
     loadingTweetScene.removeFromParent();
+    (
+      (cornGroup.getObjectByName("Cob") as THREE.Mesh)
+        .material as THREE.Material
+    ).transparent = false;
+    (
+      (cornGroup.getObjectByName("Kernel") as THREE.Mesh)
+        .material as THREE.Material
+    ).transparent = false;
     corn.createControls(renderer.domElement, cornGroup, camera);
   });
 
+  // make raining kernels possible
+  const baseKernel = (
+    await new ProgressGLTFLoader("/kernel.glb", undefined).model
+  ).scene.children[0] as THREE.Mesh;
+  baseKernel.name = "FallingBase";
+  const fallingKernelMixer = new THREE.AnimationMixer(null);
+  const fallingKernelGroup = new THREE.Group();
+  scene.add(fallingKernelGroup);
+
+  async function createFallingKernel() {
+    const kernel = baseKernel.clone();
+    const fallingBoxes = fallingKernelGroup.children.map((k) =>
+      new THREE.Box3().setFromObject(k)
+    );
+    let kbb: THREE.Box3;
+    kernel.position.z = 2.5;
+    do {
+      kernel.position.x = Math.random() * 2 - 1;
+      kernel.rotation.x = Math.PI * 2 * Math.random();
+      kernel.rotation.y = Math.PI * 2 * Math.random();
+      kernel.rotation.z = Math.PI * 2 * Math.random();
+      kbb = new THREE.Box3().setFromObject(kernel);
+    } while (fallingBoxes.some((b) => b.intersectsBox(kbb)));
+    fallingKernelGroup.add(kernel);
+    const animation = makeRainingAnimation(kernel, 3, fallingKernelMixer);
+    animation.play();
+    await animation.doneAnimating;
+    kernel.removeFromParent();
+  }
+
+  async function loopFallingKernels() {
+    while (true) {
+      await new Promise((r) => setTimeout(r, 250));
+      createFallingKernel();
+    }
+  }
+
   // create render function that utilizes the corn and composed render passes
   let lastRenderTime = Date.now() / 1000;
+  let kernelsAreFalling = false;
   const renderFunction = () => {
     const currentTime = Date.now() / 1000;
     if (activeAnimation) {
       activeAnimation.getMixer().update(currentTime - lastRenderTime);
     }
+    fallingKernelMixer.update(currentTime - lastRenderTime);
     corn.update();
+    if (corn.completelyEaten() && !kernelsAreFalling) {
+      kernelsAreFalling = true;
+      loopFallingKernels();
+      (document.querySelector("#congrats") as HTMLElement).style.display =
+        "unset";
+    }
     lastRenderTime = currentTime;
     composer.render();
   };

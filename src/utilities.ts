@@ -58,6 +58,25 @@ function makeFadeInAnimation(
   return makeAnimationAwaitable(action);
 }
 
+function makeRainingAnimation(
+  target: THREE.Object3D,
+  lengthInSeconds: number,
+  mixer: THREE.AnimationMixer
+): AwaitableAnimationAction {
+  const property = ".position";
+  const origPos = target.position;
+  const track = new THREE.VectorKeyframeTrack(
+    property,
+    [0, lengthInSeconds],
+    [origPos.x, 1, origPos.z, origPos.x, -1, origPos.z]
+  );
+  const animation = new THREE.AnimationClip("rainDown", -1, [track]);
+  const action = mixer.clipAction(animation, target);
+  action.loop = THREE.LoopOnce;
+  // console.log("making animation for", target);
+  return makeAnimationAwaitable(action);
+}
+
 function combineClips(clips: THREE.AnimationClip[]): THREE.AnimationClip {
   const mainClip = clips[0];
   for (const animation of clips.slice(1)) {
@@ -74,4 +93,5 @@ export {
   makeAnimationAwaitable,
   AwaitableAnimationAction,
   combineClips,
+  makeRainingAnimation,
 };
