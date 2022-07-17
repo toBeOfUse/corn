@@ -92,6 +92,19 @@ class CornControls {
     }
   }
 
+  cheat() {
+    const eligibleForEating = this._kernels.children.filter(
+      (k) => !k.name.includes("Secret")
+    );
+    if (eligibleForEating.length == 0) {
+      return;
+    } else {
+      for (const kernel of eligibleForEating.slice(0, 60)) {
+        kernel.removeFromParent();
+      }
+    }
+  }
+
   constructor(
     el: HTMLCanvasElement,
     startingRotation: THREE.Euler,
@@ -110,6 +123,7 @@ class CornControls {
     el.addEventListener("touchmove", (e) => this.pointerMove(e));
     el.addEventListener("touchend", () => this.pointerUp());
     el.addEventListener("click", (e) => this.click(e));
+    (window as any).cheat = () => this.cheat();
   }
 
   applyRotation(obj: Object3D) {
