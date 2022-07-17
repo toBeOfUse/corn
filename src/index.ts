@@ -85,7 +85,7 @@ async function createScene() {
   point.position.set(0, 20, 20);
   scene.add(point);
 
-  const corn = new Corn("/corn.glb", document.querySelector("#info"));
+  const corn = new Corn("/corn.2.glb", document.querySelector("#info"));
   const cornGroup = new THREE.Group();
   scene.add(cornGroup);
   let activeAnimation: AwaitableAnimationAction;
